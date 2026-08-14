@@ -6,6 +6,7 @@ size, top-k, etc. based on failure cases) you only need to change values here,
 not hunt through multiple scripts.
 """
 
+import os
 from pathlib import Path
 
 # --- Paths -------------------------------------------------------------
@@ -49,6 +50,26 @@ TOP_K = 5
 # "llama3.1:8b" if you want to compare quality later.)
 OLLAMA_MODEL = "phi4-mini"
 OLLAMA_HOST = "http://localhost:11434"
+
+# --- LLM Provider (local dev vs. free deployment) --------------------------
+
+# "ollama" = local, free, used for development (requires Ollama running).
+# "groq" = free hosted API, used when deployed (e.g. Streamlit Community
+# Cloud), where a locally-running Ollama server isn't available. Groq's free
+# tier requires no payment method: https://console.groq.com
+#
+# Auto-detects Groq when a key is present (env var or Streamlit secrets),
+# otherwise falls back to local Ollama. No manual toggling needed between
+# local development and deployment.
+
+# Streamlit automatically copies values from its Secrets settings into
+# os.environ at startup, so a plain env var check works both locally (if you
+# set GROQ_API_KEY yourself) and on Streamlit Cloud (via the Secrets UI) —
+# no need to touch st.secrets directly, which would otherwise run at import
+# time and break set_page_config()'s "must be the first command" requirement.
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+LLM_PROVIDER = "groq" if GROQ_API_KEY else "ollama"
+GROQ_MODEL = "llama-3.1-8b-instant"
 
 # --- NLP Enrichment (Phase 6, optional) -----------------------------------
 
