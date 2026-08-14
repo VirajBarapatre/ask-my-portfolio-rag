@@ -1,5 +1,5 @@
 """
-Phase 4: Streamlit UI — "case file" design (v3 — cleaned up + Phase 6 skills)
+Phase 4: Streamlit UI — "case file" design (v4 — enriched sidebar)
 
 Run with:
     streamlit run src/app.py
@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
+
 from src.config import CERTIFICATES_DIR, GROQ_MODEL, LLM_PROVIDER, OLLAMA_MODEL, READMES_DIR, RESUME_DIR
 from src.embed_store import load_vector_store, retrieve
 from src.generate import build_prompt, call_llm
@@ -30,6 +31,23 @@ EXAMPLE_QUESTIONS = [
     "What certifications does Viraj hold?",
     "What was Viraj's role in CampusEYE?",
     "What tech stack did AML Sentinel use?",
+]
+
+ABOUT_TEXT = (
+    "Data & Quantitative Analyst turning complex datasets into decisions — "
+    "from production ETL pipelines to retrieval-grounded AI systems like this one."
+)
+
+LINKS = [
+    {"label": "GitHub", "icon": "🐙", "url": "https://github.com/VirajBarapatre"},
+    {"label": "LinkedIn", "icon": "💼", "url": "https://linkedin.com/in/viraj-barapatre"},
+    {"label": "Portfolio", "icon": "🌐", "url": "https://viraj-portfolio-three.vercel.app"},
+    {"label": "Email", "icon": "✉️", "url": "mailto:virajbarapatre@outlook.com"},
+]
+
+TECH_STACK = [
+    "Python", "LangChain", "FAISS", "Sentence-Transformers",
+    "spaCy", "Ollama", "Groq", "Streamlit",
 ]
 
 LIGHT = {
@@ -115,8 +133,18 @@ def render_css() -> None:
             font-family: 'Source Serif 4', serif !important; font-size: 15px !important;
             background: {t['card']} !important; color: {t['ink']} !important;
             border: 1.5px solid {t['border']} !important; border-radius: 8px !important;
-            padding: 13px 16px !important; line-height: 1.6; height: 48px !important;
+            padding: 0 16px !important; line-height: 1.2; height: 44px !important;
+            min-height: 44px !important; box-sizing: border-box !important;
             box-shadow: 0 2px 4px rgba(20, 25, 43, 0.03) !important;
+        }}
+        div[data-testid="stTextInput"],
+        div[data-testid="stTextInput"] > div,
+        div[data-testid="stTextInput"] div[data-baseweb="input"] {{
+            height: 44px !important;
+            min-height: 44px !important;
+        }}
+        div[data-testid="stTextInput"] div[data-baseweb="input"] {{
+            border-radius: 8px !important;
         }}
         input[type="text"]::placeholder {{ color: {t['ink2']}bb !important; opacity: 0.5; }}
         input[type="text"]:focus {{
@@ -128,11 +156,22 @@ def render_css() -> None:
         div[data-testid="stFormSubmitButton"] > button {{
             background: {t['ink']}; color: {t['bg']}; border: none; border-radius: 8px;
             font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px;
-            padding: 12px 40px; letter-spacing: 0.5px;
+            padding: 0 40px; letter-spacing: 0.5px;
             box-shadow: 0 4px 12px rgba(20, 25, 43, 0.15);
-            cursor: pointer; position: relative; overflow: hidden; height: 48px;
+            cursor: pointer; position: relative; overflow: hidden; height: 44px !important;
+            min-height: 44px !important; box-sizing: border-box;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+        div[data-testid="stFormSubmitButton"] {{
+            height: 44px !important;
+            min-height: 44px !important;
+            display: flex;
+            align-items: stretch;
+        }}
+        div[data-testid="stFormSubmitButton"] > button,
+        div[data-testid="stFormSubmitButton"] > button p {{
+            margin: 0;
         }}
         div[data-testid="stFormSubmitButton"] > button:hover {{
             background: {t['resume']}; color: white; box-shadow: 0 6px 20px {t['resume']}40;
@@ -158,9 +197,7 @@ def render_css() -> None:
             transform: translateY(-2px);
             background: {t['bg']};
         }}
-        div.stButton > button:active {{
-            transform: translateY(0);
-        }}
+        div.stButton > button:active {{ transform: translateY(0); }}
 
         .entry {{
             display: flex; margin-bottom: 40px; opacity: 0;
@@ -190,30 +227,62 @@ def render_css() -> None:
         }}
         .stamp:hover {{ opacity: 0.8; transform: scale(1.02); }}
 
-        .sb-header {{
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 16px; padding: 0;
+        /* Sidebar: identity block */
+        .sb-name {{
+            font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px;
+            color: {t['ink']}; margin: 0 0 6px 0; letter-spacing: -0.3px;
         }}
-        .sb-tab {{
-            font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px;
-            color: {t['ink']}; margin: 0; letter-spacing: -0.4px; line-height: 1.2;
-            flex: 1;
+        .sb-about {{
+            color: {t['ink2']}; font-size: 12.5px; line-height: 1.6; margin: 0 0 18px 0;
+            font-style: italic;
         }}
 
+        .sb-toggle-row {{ display: flex; justify-content: flex-end; margin-bottom: 8px; }}
+
+        /* Sidebar: links */
+        .sb-links {{ display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; }}
+        .sb-link {{
+            display: flex; align-items: center; gap: 9px; padding: 8px 10px;
+            border-radius: 7px; background: {t['pill_bg']}; border: 1px solid {t['border']};
+            color: {t['ink']} !important; text-decoration: none !important;
+            font-family: 'Source Serif 4', serif; font-size: 13px; font-weight: 500;
+        }}
+        .sb-link:hover {{ border-color: {t['resume']}; color: {t['resume']} !important; }}
+
+        /* Sidebar: tech stack pills */
+        .sb-tech-row {{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }}
+        .sb-tech-pill {{
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
+            padding: 4px 9px; border-radius: 5px; background: {t['answer_bg']};
+            border: 1px solid {t['border']}; color: {t['ink2']};
+        }}
+
+        .sb-section-title {{
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase; color: {t['ink2']};
+            opacity: 0.75; margin: 4px 0 10px 0;
+        }}
+        .sb-divider {{ height: 1px; background: {t['border']}; margin: 4px 0 20px 0; }}
+
+        /* Sidebar: document index */
+        .sb-tab {{
+            font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px;
+            color: {t['ink']}; margin: 0 0 4px 0; letter-spacing: -0.3px;
+        }}
         .sb-description {{
-            color: {t['ink2']}; font-size: 12px; font-style: italic; margin: 0 0 24px 0;
+            color: {t['ink2']}; font-size: 11.5px; font-style: italic; margin: 0 0 18px 0;
             line-height: 1.6; opacity: 0.8;
         }}
         .sb-description code {{
             background: {t['answer_bg']}; color: {t['resume']}; padding: 3px 6px;
-            border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+            border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;
             font-style: normal; font-weight: 500;
         }}
 
         .cat-tab {{
             font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
             letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 12px;
-            border-radius: 6px 6px 0 0; display: block; margin: 20px 0 0 0;
+            border-radius: 6px 6px 0 0; display: block; margin: 16px 0 0 0;
             box-shadow: 0 1px 3px rgba(20, 25, 43, 0.05);
         }}
         .cat-body {{
@@ -249,7 +318,7 @@ def render_css() -> None:
 
         div[data-testid="stHorizontalBlock"] {{ gap: 12px; }}
         div[data-testid="stColumn"] {{ gap: 12px; }}
-        div[data-testid="stHorizontalBlock"] > div {{ flex: 1; min-width: 0; }}
+        div[data-testid="stHorizontalBlock"] > div {{ min-width: 0; }}
 
         details {{
             border: 1px solid {t['border']}; border-radius: 8px; padding: 14px 16px;
@@ -310,14 +379,39 @@ def ask(query: str) -> dict:
 def render_sidebar() -> None:
     t = DARK if st.session_state.get("theme", "light") == "dark" else LIGHT
 
-    col1, col2 = st.sidebar.columns([0.85, 0.15], gap="small")
-    col1.markdown('<div class="sb-tab">🗂️ Case Contents</div>', unsafe_allow_html=True)
-    with col2:
+    # Theme toggle, top-right
+    toggle_col = st.sidebar.columns([0.7, 0.3   ])[0]
+    with toggle_col:
         is_dark = st.session_state.get("theme", "light") == "dark"
         if st.button("☀️" if is_dark else "🌙", key="theme_toggle", help="Toggle theme"):
             st.session_state.theme = "light" if is_dark else "dark"
             st.rerun()
 
+    # Identity block
+    st.sidebar.markdown(
+        f"""
+        <div class="sb-name">Viraj Barapatre</div>
+        <div class="sb-about">{ABOUT_TEXT}</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Links
+    links_html = "".join(
+        f'<a class="sb-link" href="{l["url"]}" target="_blank">{l["icon"]} {l["label"]}</a>'
+        for l in LINKS
+    )
+    st.sidebar.markdown(f'<div class="sb-links">{links_html}</div>', unsafe_allow_html=True)
+
+    # Tech stack
+    st.sidebar.markdown('<div class="sb-section-title">Built with</div>', unsafe_allow_html=True)
+    tech_html = "".join(f'<span class="sb-tech-pill">{tech}</span>' for tech in TECH_STACK)
+    st.sidebar.markdown(f'<div class="sb-tech-row">{tech_html}</div>', unsafe_allow_html=True)
+
+    st.sidebar.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
+
+    # Document index
+    st.sidebar.markdown('<div class="sb-tab">🗂️ Case Contents</div>', unsafe_allow_html=True)
     st.sidebar.markdown(
         "<div class='sb-description'>"
         "Source documents indexed for retrieval. Edit <code>data/</code>, then run "
@@ -435,7 +529,7 @@ def render_main() -> None:
 
     st.markdown('<div class="card-label">New inquiry</div>', unsafe_allow_html=True)
     with st.form("ask_form", clear_on_submit=True):
-        form_cols = st.columns([1, 0.2], gap="small")
+        form_cols = st.columns([1, 0.50], gap="small")
         with form_cols[0]:
             query = st.text_input(
                 "Query",
@@ -481,7 +575,7 @@ def render_main() -> None:
 
 if __name__ == "__main__":
     if "theme" not in st.session_state:
-        st.session_state.theme = "light"
+        st.session_state.theme = "dark"
     render_css()
     render_sidebar()
     render_main()
