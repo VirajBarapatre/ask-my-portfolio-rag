@@ -1,0 +1,22 @@
+# Virtual environment
+venv/
+.venv/
+
+# Generated vector store
+faiss_index/
+
+# Personal documents (resume, certs) — don't commit these to a public repo
+data/resume/*
+data/certificates/*
+!data/resume/.gitkeep
+!data/certificates/.gitkeep
+
+# Secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store

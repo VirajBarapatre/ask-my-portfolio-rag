@@ -1,0 +1,29 @@
+# Core orchestration
+langchain==0.3.7
+langchain-community==0.3.7
+langchain-huggingface==0.1.2
+
+# Vector store
+faiss-cpu==1.14.3
+
+# Embeddings (local, free)
+sentence-transformers==3.3.1
+
+# Document loading
+pypdf==5.1.0
+
+# UI (Phase 4)
+streamlit==1.40.1
+
+# LLM API clients (Phase 3 — pick whichever you actually use)
+openai==1.55.0
+anthropic==0.39.0
+
+# Utilities
+python-dotenv==1.0.1
+
+# NLP preprocessing (Phase 6)
+spacy==3.8.2
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+
+
