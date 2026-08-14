@@ -8,8 +8,8 @@ project READMEs, and certificates, grounded in retrieved chunks from those docum
 - [x] Phase 0: Setup
 - [x] Phase 1: Document ingestion & chunking
 - [x] Phase 2: Embedding & vector store
-- [ ] Phase 3: Retrieval + generation pipeline
-- [ ] Phase 4: Streamlit UI
+- [x] Phase 3: Retrieval + generation pipeline
+- [x] Phase 4: Streamlit UI
 - [ ] Phase 5: Azure deployment (optional)
 - [ ] Phase 6: NLP preprocessing (optional)
 
