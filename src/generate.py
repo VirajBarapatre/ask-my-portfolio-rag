@@ -1,28 +1,32 @@
 """
 Phase 3: Retrieval + Generation Pipeline
 
-Ties Phase 2's retriever to a locally-running LLM (via Ollama) with a prompt
-engineered to answer strictly from the retrieved context — and to say
-"I don't know" rather than hallucinate when the context doesn't contain the
-answer.
+Ties Phase 2's retriever to an LLM (local Ollama for development, or Groq's
+free hosted API when deployed) with a prompt engineered to answer strictly
+from the retrieved context — and to say "I don't know" rather than
+hallucinate when the context doesn't contain the answer.
 
-Prerequisites:
+Local dev prerequisites:
     1. Install Ollama: https://ollama.com/download
-    2. Pull a model:   ollama pull llama3.1:8b
+    2. Pull a model:   ollama pull phi4-mini
     3. Ollama runs a local server automatically after install (default
        http://localhost:11434). If it's not running, start it with:
        ollama serve
+
+Deployment: set GROQ_API_KEY (env var or Streamlit secret) and the app
+automatically switches to Groq — see LLM_PROVIDER in src/config.py.
 
 Run directly to ask a few real test questions end-to-end:
 
     python -m src.generate
 """
 
-import ollama
+import ollama as ollama_client
+from groq import Groq
 
 from langchain.schema import Document
 
-from src.config import OLLAMA_MODEL, OLLAMA_HOST
+from src.config import GROQ_API_KEY, GROQ_MODEL, LLM_PROVIDER, OLLAMA_HOST, OLLAMA_MODEL
 from src.embed_store import load_vector_store, retrieve
 
 
@@ -79,7 +83,7 @@ Answer the question using only the context above."""
 
 def call_ollama(prompt: str) -> str:
     """Send the prompt to a locally running Ollama model and return the reply."""
-    client = ollama.Client(host=OLLAMA_HOST)
+    client = ollama_client.Client(host=OLLAMA_HOST)
     response = client.chat(
         model=OLLAMA_MODEL,
         messages=[
@@ -88,6 +92,33 @@ def call_ollama(prompt: str) -> str:
         ],
     )
     return response["message"]["content"]
+
+
+def call_groq(prompt: str) -> str:
+    """Send the prompt to Groq's free hosted API and return the reply.
+
+    Used automatically when GROQ_API_KEY is set (e.g. as a Streamlit Cloud
+    secret) — this is what runs when the app is deployed, since a locally
+    running Ollama server isn't available there.
+    """
+    client = Groq(api_key=GROQ_API_KEY)
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ],
+    )
+    return response.choices[0].message.content
+
+
+def call_llm(prompt: str) -> str:
+    """Route to whichever provider is configured — local Ollama for
+    development, or Groq's free API when deployed. See LLM_PROVIDER in
+    src/config.py for the auto-detection logic."""
+    if LLM_PROVIDER == "groq":
+        return call_groq(prompt)
+    return call_ollama(prompt)
 
 
 def answer_question(query: str, k: int | None = None) -> dict:
@@ -102,7 +133,7 @@ def answer_question(query: str, k: int | None = None) -> dict:
     context_docs = retrieve(store, query, **retrieve_kwargs)
 
     prompt = build_prompt(query, context_docs)
-    answer = call_ollama(prompt)
+    answer = call_llm(prompt)
 
     return {
         "query": query,
@@ -138,8 +169,8 @@ def _print_result(result: dict) -> None:
 
 
 if __name__ == "__main__":
-    print("Running end-to-end RAG test questions (retrieval + Ollama generation)...")
-    print("This requires Ollama running locally with the model already pulled.\n")
+    print("Running end-to-end RAG test questions...")
+    print("Uses local Ollama unless GROQ_API_KEY is set.\n")
 
     for question in TEST_QUESTIONS:
         result = answer_question(question)

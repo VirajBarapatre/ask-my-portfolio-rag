@@ -16,6 +16,8 @@ pypdf==5.1.0
 streamlit==1.40.1
 
 # LLM API clients (Phase 3 — pick whichever you actually use)
+ollama==0.4.4
+groq==0.13.0
 openai==1.55.0
 anthropic==0.39.0
 

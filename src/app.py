@@ -11,10 +11,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
-
-from src.config import CERTIFICATES_DIR, OLLAMA_MODEL, READMES_DIR, RESUME_DIR
+from src.config import CERTIFICATES_DIR, GROQ_MODEL, LLM_PROVIDER, OLLAMA_MODEL, READMES_DIR, RESUME_DIR
 from src.embed_store import load_vector_store, retrieve
-from src.generate import build_prompt, call_ollama
+from src.generate import build_prompt, call_llm
 
 
 st.set_page_config(page_title="Ask My Portfolio · Case File", page_icon="🗂️", layout="wide")
@@ -292,7 +291,7 @@ def ask(query: str) -> dict:
     store = get_vector_store()
     context_docs = retrieve(store, query)
     prompt = build_prompt(query, context_docs)
-    answer = call_ollama(prompt)
+    answer = call_llm(prompt)
     return {
         "query": query,
         "answer": answer,
@@ -416,7 +415,7 @@ def render_main() -> None:
             <span class="pill"><span class="n">{len(doc_counts['resume'])}</span> resume</span>
             <span class="pill"><span class="n">{len(doc_counts['project_readme'])}</span> projects</span>
             <span class="pill"><span class="n">{len(doc_counts['certificate'])}</span> certs</span>
-            <span class="pill">model: <span class="n">{OLLAMA_MODEL}</span></span>
+            <span class="pill">model: <span class="n">{GROQ_MODEL if LLM_PROVIDER == 'groq' else OLLAMA_MODEL}</span> ({LLM_PROVIDER})</span>
             <span class="pill pill-ready">● ready</span>
         </div>
         """,
