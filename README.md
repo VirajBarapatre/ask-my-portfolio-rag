@@ -4,7 +4,7 @@ A Retrieval-Augmented Generation chatbot that answers questions about my resume,
 project READMEs, and certificates — grounded in the actual source documents,
 not the model's general knowledge.
 
-**Live demo:** https://ask-my-portfolio-rag-vbjxngijzxcs7cp4jczr3a.streamlit.app/
+**Live demo:** https://virajs-ask-my-portfolio.streamlit.app/
 **Repo:** https://github.com/VirajBarapatre/ask-my-portfolio-rag
 
 Built to close a real, recurring skill gap (RAG, vector databases, prompt
@@ -261,7 +261,7 @@ the environment.
 
 ## Author
 
-Viraj Barapatre — Data Analyst / Business Analyst / Quantitative Analyst
+Viraj Barapatre — Data Analyst / Business Analyst / Data Scientiest / ML Engineer
 [GitHub](https://github.com/VirajBarapatre) ·
 [LinkedIn](https://linkedin.com/in/viraj-barapatre) ·
 [Portfolio](https://viraj-portfolio-three.vercel.app)
