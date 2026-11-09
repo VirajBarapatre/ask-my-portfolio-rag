@@ -69,8 +69,7 @@ OLLAMA_HOST = "http://localhost:11434"
 # time and break set_page_config()'s "must be the first command" requirement.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LLM_PROVIDER = "groq" if GROQ_API_KEY else "ollama"
-GROQ_MODEL = "llama-3.1-8b-instant"
-
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 # --- NLP Enrichment (Phase 6, optional) -----------------------------------
 
 # When True, embed_store.py runs each chunk through spaCy NER + skill
