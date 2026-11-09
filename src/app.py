@@ -25,6 +25,20 @@ DOC_TYPE_META = {
     "certificate":     {"label": "CERTIFICATE", "tilt": -1},
 }
 CATEGORY_LABELS = {"resume": "Resume", "project_readme": "Project Files", "certificate": "Certificates"}
+SIDEBAR_DOCUMENT_NAMES = {
+    "resume": ("Viraj_Barapatre_Analyst_Resume.pdf",),
+    "certificate": (
+        "citi_technology_software_development_job_simulation.txt",
+        "codecademy_cs_professional_certification.txt",
+        "codecademy_learn_python_3.txt",
+        "codecademy_power_bi_dashboards.txt",
+        "deloitte_technology_job_simulation.txt",
+        "goldman_sachs_risk_job_simulation.txt",
+        "oracle_oci_ai_foundations_associate.txt",
+        "php_mysql_training.txt",
+        "rdbms_postgresql_training.txt",
+    ),
+}
 
 EXAMPLE_QUESTIONS = [
     "What ML models has Viraj worked with?",
@@ -350,9 +364,15 @@ def _index_count(store) -> int:
 
 def _list_indexed_documents() -> dict[str, list[str]]:
     return {
-        "resume": sorted(p.name for p in RESUME_DIR.glob("*.pdf")),
+        "resume": sorted(
+            {p.name for p in RESUME_DIR.glob("*.pdf")}
+            | set(SIDEBAR_DOCUMENT_NAMES["resume"])
+        ),
         "project_readme": sorted(p.name for p in READMES_DIR.glob("*.md")),
-        "certificate": sorted(p.name for p in CERTIFICATES_DIR.glob("*.txt")),
+        "certificate": sorted(
+            {p.name for p in CERTIFICATES_DIR.glob("*.txt")}
+            | set(SIDEBAR_DOCUMENT_NAMES["certificate"])
+        ),
     }
 
 

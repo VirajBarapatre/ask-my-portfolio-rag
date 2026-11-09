@@ -135,6 +135,8 @@ streamlit run src/app.py          # Phase 4 — the actual UI, http://localhost:
 
 If you edit anything in `data/`, re-run `python -m src.embed_store` to rebuild
 the index before the UI reflects the change.
+Resume and certificate files are excluded from Git; update
+`SIDEBAR_DOCUMENT_NAMES` in `src/app.py` when their displayed filenames change.
 
 ---
 
