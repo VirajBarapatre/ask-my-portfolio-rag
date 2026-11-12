@@ -6,6 +6,7 @@ not the model's general knowledge.
 
 **Live demo:** https://virajs-ask-my-portfolio.streamlit.app/
 **Repo:** https://github.com/VirajBarapatre/ask-my-portfolio-rag
+**Follow-up project:** [Agentic RAG Portfolio](https://github.com/VirajBarapatre/Agentic-RAG-Portfolio) is a tool-calling agent (document search, SQL, calculator) with an evaluation harness that measures how well it answers. This repo is the deployed single-step RAG chatbot it grew out of.
 
 Built to close a real, recurring skill gap (RAG, vector databases, prompt
 engineering, NLP) that kept showing up as a hard requirement in Data
@@ -53,7 +54,7 @@ User question ─────▶│   src/generate.py       │─────�
                                 │
                     LLM_PROVIDER auto-switch:
                     - local dev  → Ollama (phi4-mini)
-                    - deployed   → Groq (llama-3.1-8b-instant, free API)
+                    - deployed   → Groq (openai/gpt-oss-20b, free API; set via GROQ_MODEL)
                                 │
                                 ▼
                     src/app.py — Streamlit UI
@@ -95,7 +96,7 @@ ask-my-portfolio-rag/
 | Vector store | FAISS | free, local, persists to disk |
 | NLP enrichment | spaCy (NER + `PhraseMatcher`) | metadata only — see design notes below |
 | Generation (local dev) | Ollama (`phi4-mini`) | free, fully offline |
-| Generation (deployed) | Groq (`llama-3.1-8b-instant`) | free hosted API — Ollama can't run on Streamlit Cloud |
+| Generation (deployed) | Groq (`openai/gpt-oss-20b`, configurable via `GROQ_MODEL`) | free hosted API — Ollama can't run on Streamlit Cloud |
 | UI | Streamlit | fast to build, free hosting via Community Cloud |
 
 ---
@@ -155,6 +156,7 @@ free API** instead, auto-selected at runtime — no manual toggling.
 4. Under **Advanced settings → Secrets**, add:
    ```toml
    GROQ_API_KEY = "your-key-here"
+   GROQ_MODEL = "openai/gpt-oss-20b"   # optional; this is the default
    ```
 5. Deploy. `LLM_PROVIDER` in `src/config.py` detects `GROQ_API_KEY` in the
    environment and automatically switches from Ollama to Groq — same
@@ -209,6 +211,13 @@ constraint. Groq's free tier resolves that without code branching: the same
 `call_llm()` function routes based on whether `GROQ_API_KEY` is present in
 the environment.
 
+**The hosted model name is configuration, not code — learned from a real
+outage.** Groq retired `llama-3.1-8b-instant` for free-tier users on
+2026-08-16. The model name was hardcoded in `src/config.py`, so the live demo
+kept requesting a model that no longer existed. The fix moved it to an
+environment variable (`GROQ_MODEL`, default `openai/gpt-oss-20b`): the next
+retirement is a one-line change in Streamlit Secrets, not a code change.
+
 ---
 
 ## What This Project Lets Me Honestly Claim
@@ -257,13 +266,14 @@ the environment.
 | `WinError 10061` / connection refused calling Ollama | Ollama server isn't running | `ollama serve` in a separate terminal |
 | `pip install` fails compiling `numpy`/`torch` from source | Python version too new, no prebuilt wheels yet | Use Python 3.11 or 3.12 |
 | `StreamlitSetPageConfigMustBeFirstCommandError` | Some import (e.g. touching `st.secrets`) ran before `set_page_config()` | Avoid calling any Streamlit command at module import time |
+| Groq error mentioning a decommissioned or unknown model | Groq retired the model | Set `GROQ_MODEL` in Streamlit Secrets to a model listed in the Groq console |
 | Deployed app builds but crashes / OOM during `pip install` | Streamlit Cloud free tier ran out of memory compiling from source | Confirm `runtime.txt` pins Python 3.11 so wheels install instead of compiling |
 
 ---
 
 ## Author
 
-Viraj Barapatre — Data Analyst / Business Analyst / Data Scientiest / ML Engineer
+Viraj Barapatre — Data Analyst / Business Analyst / Data Scientist / ML Engineer
 [GitHub](https://github.com/VirajBarapatre) ·
 [LinkedIn](https://linkedin.com/in/viraj-barapatre) ·
 [Portfolio](https://viraj-portfolio-three.vercel.app)
